@@ -57,7 +57,6 @@ pub async fn callback(mut req: Request<AppState>) -> tide::Result {
         .recv_json()
         .await
         .map_err(|err| tide::Error::from_str(500, format!("Fetching user info failed: {}", err)))?;
-    println!("{:?}", userinfo);
     let user_info = UserInfo {
         email: userinfo["email"].as_str().unwrap_or_default().to_string(),
         full_name: userinfo["name"].as_str().unwrap_or_default().to_string(),
@@ -94,7 +93,7 @@ pub async fn callback(mut req: Request<AppState>) -> tide::Result {
 
     // Step 3: Create a session with the user's ID and email
     let session = req.session_mut();
-    session.insert("user_id", user_id)?;
+    session.insert("user_id", user_id.to_string())?;
     session.insert("email", user_info.email)?;
 
     // Redirect the user to the dashboard
@@ -128,12 +127,13 @@ pub struct User {
 
 pub async fn validate_session(req: Request<AppState>) -> tide::Result {
     let session = req.session();
-
+    println!("here: {:?}", session);
     // Extract session data
     if let (Some(user_id_str), Some(email)) = (
         session.get::<String>("user_id"),
         session.get::<String>("email"),
     ) {
+        
         // Convert user_id to Uuid
         let user_id = Uuid::parse_str(&user_id_str).map_err(|_| {
             tide::Error::from_str(StatusCode::BadRequest, "Invalid user ID format")
@@ -163,7 +163,7 @@ pub async fn validate_session(req: Request<AppState>) -> tide::Result {
                 "last_name": user.last_name,
                 "full_name": user.full_name,
             });
-
+            println!("Preparing json send: {:?}", user_info);
             return Ok(Response::builder(StatusCode::Ok)
                 .body(user_info)
                 .content_type(tide::http::mime::JSON)
