@@ -94,12 +94,32 @@ pub async fn callback(mut req: Request<AppState>) -> tide::Result {
     // Step 3: Create a session with the user's ID and email
     let session = req.session_mut();
     session.insert("user_id", user_id.to_string())?;
-    session.insert("email", user_info.email)?;
+    session.insert("email", user_info.email.clone())?;
 
+    let html = format!(
+        r#"
+        <script>
+          // Send data back to the parent window
+          window.opener.postMessage(
+            {{ type: 'oauth-success', userInfo: {user_info} }},
+            'http://localhost:3000'
+          );
+
+          // Close the popup
+          window.close();
+        </script>
+        "#,
+        user_info = serde_json::to_string(&user_info).unwrap()
+    );
+
+    let mut res = Response::new(StatusCode::Ok);
+    res.insert_header("Content-Type", "text/html"); // Ensure the response is treated as HTML
+    res.set_body(html);
+    Ok(res)
     // Redirect the user to the dashboard
-    let mut response = Response::new(StatusCode::Found);
-    response.insert_header("Location", "http://localhost:3000/dashboard");
-    Ok(response)
+    // let mut response = Response::new(StatusCode::Found);
+    // response.insert_header("Location", "http://localhost:3000/dashboard");
+    // Ok(response)
 
     // let session = req.session_mut();
     // session.insert("user_email", user_info.email.clone())?;
