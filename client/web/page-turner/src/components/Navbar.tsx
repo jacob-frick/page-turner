@@ -1,17 +1,7 @@
 // components/Navbar.tsx
-import { cookies } from 'next/headers';
 import 'tailwindcss/tailwind.css'
 
-interface NavbarProps {
-  sessionId: string | null;
-}
-
 export default async function Navbar() {
-  // Retrieve cookies on the server side
-  const cookieStore = await cookies();
-  const sessionId = cookieStore.get('custom_session_id')?.value || null;
-
-  // Return the navbar with session info passed down
   return (
     <div>
       {/* Navbar */}
@@ -45,12 +35,6 @@ export default async function Navbar() {
             </ul>
           </div>
         </div>
-      </div>
-
-      {/* Display the session ID */}
-      <div className="mt-4">
-        <h1 className="text-2xl">Session Cookie:</h1>
-        <pre>{sessionId ? `Session ID: ${sessionId}` : 'No session found'}</pre>
       </div>
     </div>
   );
